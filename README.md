@@ -1,38 +1,58 @@
 # dograh-ctl
 
+![dograh-ctl: the missing command line for self-hosted voice agents](assets/hero.png)
+
 A CLI to run a self-hosted [Dograh](https://github.com/dograh-hq/dograh) voice-agent platform from the terminal: manage agents, telephony, and models, and pull call metrics, without clicking through the dashboard.
 
-Built live on the AI by Erick stream.
+## Why this exists
 
-## Why
+Dograh ships a REST API, generated SDKs, and a dashboard, but no command line. Everything you do to run a voice agent in production (checking which number routes to which agent, reading call latency after a change, flipping a model) means clicking through the UI. `dograh-ctl` is the missing terminal control surface, so the whole voice stack is scriptable, diffable, and automatable.
 
-Dograh ships a REST API, generated SDKs, and a dashboard, but no command line. `dograh-ctl` is the missing terminal control surface, so the whole setup is scriptable.
+It is also the foundation for the next step: wrapping these commands as an MCP server so an agent can drive Dograh itself, mid-call.
 
-## Setup
+## Install
 
 ```bash
+git clone https://github.com/erickcxc/dograh-ctl.git
+cd dograh-ctl
 pip install -e .
-cp .env.example .env   # then fill in your values
-export DOGRAH_BASE_URL=https://your-dograh-host
-export DOGRAH_API_KEY=dgr_xxx   # create one in Dograh -> Developers
+cp .env.example .env
 ```
 
-## Usage
+Point it at your instance and key (create one in Dograh, under Developers):
 
 ```bash
-dograh-ctl ping            # verify connectivity + API-key auth
+export DOGRAH_BASE_URL=https://your-dograh-host
+export DOGRAH_API_KEY=dgr_xxx
 ```
 
-More commands are built live on stream:
+Auth is the `X-API-Key` header (Bearer returns 401). The key is read from the environment and stays in `.env`, which is gitignored, never in the repo.
 
-- `agents list` / `agents create`
-- `runs list` / `runs latency`
-- `numbers list` / `numbers assign`
-- `models set`
+## Commands
 
-Auth is the `X-API-Key` header; the client reads `DOGRAH_BASE_URL` and `DOGRAH_API_KEY` from the environment. Your key stays in `.env` (gitignored), never in the repo.
+| Command | What it does |
+|---|---|
+| `ping` | Verify connectivity and API-key auth against your instance. |
+| `agents list` | List the workflows/agents on the instance. |
+| `runs list` / `runs latency` | Recent call runs with duration, disposition, and per-run latency. |
+| `numbers list` / `numbers assign` | Phone numbers on a telephony config; route a number to an agent. |
+| `models set` | Set the model configuration for an agent. |
 
-> Next episode: wrap these commands as an MCP server so an agent can drive Dograh.
+`ping` ships today; the rest of the command groups are built live on stream. Run `dograh-ctl --help` for the current surface.
+
+## Design
+
+- Thin HTTP client (`httpx`) with the `X-API-Key` header; reads `DOGRAH_BASE_URL` and `DOGRAH_API_KEY` from the environment.
+- `typer` plus `rich` for a clean, self-documenting CLI.
+- Talks only to your own self-hosted Dograh instance. This is a control layer on top of Dograh; it never vendors or republishes Dograh's code.
+
+## Built live
+
+Designed and built in one hour, live on the AI by Erick stream (Day 8 of the one-hour build challenge), as the engine-first pivot into voice. The next episode wraps these commands as an MCP server so a phone agent can drive Dograh in the middle of a call.
+
+Daily builds: https://www.youtube.com/channel/UCWCXKXvNtNbKPkeK_t5CZlg
+
+I build agentic systems like this for businesses. Reach me through the channel.
 
 ## License
 
