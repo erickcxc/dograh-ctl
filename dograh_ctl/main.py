@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.table import Table
 
 from .client import DograhClient
+from .stats import latency_summary
 
 app = typer.Typer(
     help="Run your self-hosted Dograh voice-agent platform from the terminal.",
@@ -56,6 +57,53 @@ def agents_list():
     console.print(table)
 
 
+@agents_app.command("create")
+def agents_create(
+    use_case: str = typer.Option(..., "--use-case", "-u", help="Short use case, e.g. 'lead qualification'."),
+    describe: str = typer.Option(..., "--describe", "-d", help="What the agent does (becomes its prompt)."),
+    call_type: str = typer.Option("inbound", "--call-type", help="inbound or outbound."),
+):
+    """Generate a new voice agent from a use case + description (reflects in the dashboard)."""
+    client = DograhClient()
+    ct = "inbound" if call_type.lower().startswith("in") else "outbound"
+    wf = client.request(
+        "POST",
+        "/api/v1/workflow/create/template",
+        json={"call_type": ct, "use_case": use_case, "activity_description": describe},
+    )
+    wf = wf if isinstance(wf, dict) else {}
+    inner = wf.get("workflow") if isinstance(wf.get("workflow"), dict) else wf
+    wid = inner.get("id")
+    name = inner.get("name") or use_case
+    rprint(f"[green]✓[/green] created agent [cyan]#{wid}[/cyan] {name} — now visible in the dashboard")
+
+
+@agents_app.command("set-prompt")
+def agents_set_prompt(agent_id: int, prompt: str):
+    """Update an agent's main prompt, then it reflects in the dashboard."""
+    client = DograhClient()
+    wf = client.get(f"/api/v1/workflow/fetch/{agent_id}")
+    wd = wf.get("workflow_definition") or {}
+    hit = False
+    for n in wd.get("nodes", []):
+        if n.get("type") == "agentNode":
+            n.setdefault("data", {})["prompt"] = prompt
+            hit = True
+    if not hit:
+        rprint("[red]✗[/red] no agentNode found in this agent")
+        raise typer.Exit(1)
+    client.request("PUT", f"/api/v1/workflow/{agent_id}", json={"workflow_definition": wd})
+    rprint(f"[green]✓[/green] agent #{agent_id} prompt updated — refresh the dashboard")
+
+
+@agents_app.command("rename")
+def agents_rename(agent_id: int, name: str):
+    """Rename an agent (the big headline in the dashboard editor)."""
+    client = DograhClient()
+    client.request("PUT", f"/api/v1/workflow/{agent_id}", json={"name": name})
+    rprint(f"[green]✓[/green] agent #{agent_id} renamed to '{name}'")
+
+
 # --- runs -------------------------------------------------------------------
 runs_app = typer.Typer(help="Inspect call runs.", no_args_is_help=True)
 app.add_typer(runs_app, name="runs")
@@ -89,6 +137,21 @@ def runs_list(limit: int = typer.Option(10, "--limit", "-n", help="Recent runs t
             (r.get("created_at") or "")[:19].replace("T", " "),
         )
 
+    console.print(table)
+
+
+@runs_app.command("latency")
+def runs_latency(limit: int = typer.Option(200, "--limit", "-n", help="Sample size of recent runs.")):
+    """Summarize call-duration latency (avg/p50/p95/min/max) across recent runs."""
+    client = DograhClient()
+    data = client.get("/api/v1/organizations/usage/runs", params={"page": 1, "limit": limit})
+    runs = data.get("runs", []) if isinstance(data, dict) else (data or [])
+    s = latency_summary(runs)
+
+    table = Table(title=f"Latency · {s['with_duration']}/{s['count']} run(s) with duration (seconds)")
+    for col in ("avg", "p50", "p95", "min", "max"):
+        table.add_column(col, justify="right")
+    table.add_row(*[("-" if s[k] is None else str(s[k])) for k in ("avg", "p50", "p95", "min", "max")])
     console.print(table)
 
 
