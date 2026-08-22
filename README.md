@@ -102,6 +102,13 @@ This is the reason dograh-ctl exists: a coding agent should be able to create a 
   claude plugin install dograh-ctl
   ```
   The plugin registers `dograh-ops` (`uvx dograh-ctl serve`, credentials passed through from your shell as `${DOGRAH_BASE_URL}` / `${DOGRAH_API_KEY}`, never stored) and installs the `dograh-ctl` skill, which teaches the lifecycle: create -> set_prompt -> set_model -> validate -> publish -> number -> chat test -> call -> transcript. `/dograh-ctl-setup` checks the environment and the connection.
+
+  If the marketplace add stalls (it clones over SSH on machines that have a GitHub SSH key configured but no access, and waits on the key prompt), use a local clone instead:
+  ```bash
+  git clone https://github.com/erickcxc/dograh-ctl.git
+  claude plugin marketplace add ./dograh-ctl
+  claude plugin install dograh-ctl@dograh-ctl
+  ```
 - **Any MCP client:** `dograh-ctl mcp-config` prints the `claude mcp add` line and the JSON block.
 - **Shell-driving agents:** every command takes `--json`; exit codes are stable (2 config, 1 remote); `AGENTS.md` has the conventions.
 - **Safety for autonomous use:** tools that place calls (`runs_trigger`, `campaigns_start`) are annotated destructive so clients confirm; writes are idempotent read-modify-write; payloads are scrubbed of keys; `keys create/revoke` and `numbers remove` are CLI-only on purpose.
