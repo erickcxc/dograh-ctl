@@ -1,5 +1,6 @@
 """--json works before or after the command; --version prints the package version."""
 import json
+import pathlib
 
 import httpx
 from conftest import load_fixture
@@ -22,6 +23,7 @@ def test_trailing_json_flag_on_a_command(cli, api):
 
 
 def test_version_flag():
+    import tomllib
     from conftest import CliRunner
 
     from dograh_ctl import __version__
@@ -30,4 +32,6 @@ def test_version_flag():
     result = CliRunner().invoke(app, ["--version"])
     assert result.exit_code == 0
     assert __version__ in result.output
-    assert __version__ == "0.2.0"
+    # the package version and pyproject must never drift
+    pyproject = tomllib.loads((pathlib.Path(__file__).parents[1] / "pyproject.toml").read_text())
+    assert __version__ == pyproject["project"]["version"]
