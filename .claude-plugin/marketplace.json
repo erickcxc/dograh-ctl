@@ -1,0 +1,18 @@
+{
+  "name": "dograh-ctl",
+  "owner": {
+    "name": "Erick Paniagua",
+    "url": "https://github.com/erickcxc"
+  },
+  "metadata": {
+    "description": "Claude Code plugin for dograh-ctl: create and operate self-hosted Dograh voice agents (MCP server + skill + setup command)."
+  },
+  "plugins": [
+    {
+      "name": "dograh-ctl",
+      "source": "./",
+      "version": "0.3.0",
+      "description": "Create and operate self-hosted Dograh voice agents from Claude Code: agents, prompts, models, publish, numbers, text test, calls, transcripts, latency, campaigns. Registers the dograh-ops MCP server (uvx dograh-ctl serve) and installs the dograh-ctl skill."
+    }
+  ]
+}

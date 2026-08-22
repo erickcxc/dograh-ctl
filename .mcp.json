@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "dograh-ops": {
+      "command": "uvx",
+      "args": ["dograh-ctl", "serve"],
+      "env": {
+        "DOGRAH_BASE_URL": "${DOGRAH_BASE_URL}",
+        "DOGRAH_API_KEY": "${DOGRAH_API_KEY}"
+      }
+    }
+  }
+}

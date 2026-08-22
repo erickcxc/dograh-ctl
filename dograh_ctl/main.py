@@ -43,6 +43,35 @@ def ping():
     )
 
 
+@app.command("mcp-config")
+def mcp_config(
+    name: str = typer.Option("dograh-ops", "--name", help="Server name to register."),
+):
+    """Print how to register the MCP server: a `claude mcp add` line plus JSON for other clients."""
+    import json as _json
+
+    cfg = {
+        "mcpServers": {
+            name: {
+                "command": "uvx",
+                "args": ["dograh-ctl", "serve"],
+                "env": {
+                    "DOGRAH_BASE_URL": "${DOGRAH_BASE_URL}",
+                    "DOGRAH_API_KEY": "${DOGRAH_API_KEY}",
+                },
+            }
+        }
+    }
+    if output.state.json:
+        output.emit(cfg)
+        return
+    typer.echo("# Claude Code (run in a shell where DOGRAH_BASE_URL and DOGRAH_API_KEY are set):")
+    typer.echo(f"claude mcp add {name} -- uvx dograh-ctl serve")
+    typer.echo("")
+    typer.echo("# Any MCP client (.mcp.json / settings); env values are references, not secrets:")
+    typer.echo(_json.dumps(cfg, indent=2))
+
+
 @app.command()
 def serve():
     """Run the MCP operations server over stdio so an agent can drive Dograh through dograh-ctl."""

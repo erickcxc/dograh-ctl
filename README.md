@@ -75,7 +75,7 @@ Every command accepts `--json` (raw API payload, for scripts). Every failure is 
 | | `remove +E164 --yes` | Remove from Dograh (does not release it at the carrier). |
 | models | `show` | Org model configuration: mode, realtime, llm, tts, stt. |
 | | `set --realtime P/M` / `--llm P/M` / `--tts P/M` / `--stt P/M` | Change one block; the server re-merges your stored secrets. |
-| campaigns | `list`, `status <id>` | Campaigns and live progress. |
+| campaigns | `list`, `status <id>`, `watch <id> [--interval] [--once]` | Campaigns, live progress, and a live dashboard while a campaign dials (numbers masked to the last 4 digits). |
 | | `create --name N --agent ID --csv FILE [--config ID] [--max-concurrency N]` | Upload a CSV (`phone_number` column, see `examples/campaign-sample.csv`) and create. |
 | | `start <id> --yes`, `pause <id>` | Control. `start` places real calls. |
 | telephony | `configs`, `providers` | Telephony configurations; supported providers and their fields. |
@@ -91,6 +91,20 @@ Buying a number is a carrier action: `twilio phone-numbers:buy:local --country-c
 - `models set` and `agents set-model` read the current configuration, change one block, and write the whole thing back, so masked secrets are merged by the server, never overwritten with a placeholder.
 - Nothing prints a secret. `keys create` shows the prefix; `--reveal` prints the full key once.
 - Edits to an agent are drafts. `agents publish` is the step that changes production behaviour.
+
+## For AI agents (Claude Code and any MCP client)
+
+This is the reason dograh-ctl exists: a coding agent should be able to create a voice agent, publish it, give it a number, test it, call it, and read the transcript, without a human clicking through a dashboard.
+
+- **One-step install for Claude Code** (MCP server + skill + setup command):
+  ```bash
+  claude plugin marketplace add erickcxc/dograh-ctl
+  claude plugin install dograh-ctl
+  ```
+  The plugin registers `dograh-ops` (`uvx dograh-ctl serve`, credentials passed through from your shell as `${DOGRAH_BASE_URL}` / `${DOGRAH_API_KEY}`, never stored) and installs the `dograh-ctl` skill, which teaches the lifecycle: create -> set_prompt -> set_model -> validate -> publish -> number -> chat test -> call -> transcript. `/dograh-ctl-setup` checks the environment and the connection.
+- **Any MCP client:** `dograh-ctl mcp-config` prints the `claude mcp add` line and the JSON block.
+- **Shell-driving agents:** every command takes `--json`; exit codes are stable (2 config, 1 remote); `AGENTS.md` has the conventions.
+- **Safety for autonomous use:** tools that place calls (`runs_trigger`, `campaigns_start`) are annotated destructive so clients confirm; writes are idempotent read-modify-write; payloads are scrubbed of keys; `keys create/revoke` and `numbers remove` are CLI-only on purpose.
 
 ## Build with Dograh's MCP, operate with dograh-ctl serve
 

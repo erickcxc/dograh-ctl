@@ -4,6 +4,17 @@ All notable changes to dograh-ctl. The format follows [Keep a Changelog](https:/
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-22
+
+Agent-first release: Claude Code (or any MCP client) can now create, publish, number, test, and call a voice agent end to end through dograh-ctl.
+
+### Added
+- `serve`: full lifecycle tools (`agents_create`, `agents_set_prompt`, `agents_set_model`, `agents_validate`, `agents_publish`, `agents_chat`, `numbers_add`, `campaigns_list/create/start/pause`, `telephony_configs`, `tools_list`, `keys_list`) with `next` hints and a recipe in the server instructions. `keys_create/revoke` and `numbers_remove` stay CLI-only.
+- Claude Code plugin in the repo: `.claude-plugin/plugin.json` + `marketplace.json`, plugin-root `.mcp.json` (registers `dograh-ops` via `uvx dograh-ctl serve`), the `dograh-ctl` skill (lifecycle recipe), and the `/dograh-ctl-setup` command.
+- `dograh-ctl mcp-config`: prints the `claude mcp add` line and JSON for other MCP clients.
+- `AGENTS.md` for agents using or working on the repo.
+- `campaigns watch <id>`: live dashboard (progress bar + calls table, numbers masked to the last 4 digits).
+
 ## [0.2.1] - 2026-08-22
 
 First PyPI release: `pip install dograh-ctl` / `uv tool install dograh-ctl`.
