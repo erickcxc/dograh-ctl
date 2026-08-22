@@ -1,6 +1,8 @@
 """agents: the voice agents (Dograh calls them workflows)."""
 from __future__ import annotations
 
+from typing import Optional
+
 import typer
 
 from .. import output
@@ -16,6 +18,18 @@ AGENT_COLUMNS = [
     ("Runs", "runs", {"justify": "right"}),
     ("Created", "created"),
 ]
+
+
+def ensure_draft(client: DograhClient, agent_id: int, workflow: Optional[dict] = None) -> dict:
+    """Make sure the agent has a draft before a PUT.
+
+    Live finding: PUT /workflow/{id} on a published workflow with no draft returns 500 (the change
+    still persists). POST /workflow/{id}/create-draft first when version_status is not "draft".
+    """
+    wf = workflow if workflow is not None else client.get(f"/api/v1/workflow/fetch/{agent_id}")
+    if (wf.get("version_status") or "draft") != "draft":
+        client.post(f"/api/v1/workflow/{agent_id}/create-draft")
+    return wf
 
 
 @app.command("list")
@@ -61,7 +75,7 @@ def agents_create(
 def agents_set_prompt(agent_id: int, prompt: str):
     """Replace the prompt on every agentNode of an agent (saved as a new draft)."""
     client = DograhClient()
-    wf = client.get(f"/api/v1/workflow/fetch/{agent_id}")
+    wf = ensure_draft(client, agent_id)
     wd = wf.get("workflow_definition") or {}
     hit = False
     for n in wd.get("nodes", []):
@@ -82,5 +96,6 @@ def agents_set_prompt(agent_id: int, prompt: str):
 def agents_rename(agent_id: int, name: str):
     """Rename an agent."""
     client = DograhClient()
+    ensure_draft(client, agent_id)
     result = client.put(f"/api/v1/workflow/{agent_id}", json={"name": name})
     output.ok(f"agent #{agent_id} renamed to '{name}'", data=result)

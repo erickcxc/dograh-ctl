@@ -37,8 +37,35 @@ def test_set_prompt_fails_cleanly_when_no_agent_node(cli, api):
 
 
 def test_rename_puts_name_only(cli, api):
+    # rename reads the agent first (draft guard); the fixture is already a draft, so no create-draft
+    api.get("/api/v1/workflow/fetch/7").mock(return_value=httpx.Response(200, json=load_fixture("workflow_fetch_one")))
     put = api.put("/api/v1/workflow/7").mock(return_value=httpx.Response(200, json={"id": 7, "name": "Renamed"}))
     result = cli("agents", "rename", "7", "Renamed", "--json")
     assert result.exit_code == 0, result.output
     assert json.loads(put.calls.last.request.content) == {"name": "Renamed"}
     assert json.loads(result.output)["name"] == "Renamed"
+
+
+def test_set_prompt_creates_a_draft_first_when_agent_is_published(cli, api):
+    """Live finding (rehost box): PUT /workflow/{id} with no draft returns 500; create-draft first."""
+    wf = dict(load_fixture("workflow_fetch_one"), version_status="published")
+    api.get("/api/v1/workflow/fetch/7").mock(return_value=httpx.Response(200, json=wf))
+    draft = api.post("/api/v1/workflow/7/create-draft").mock(
+        return_value=httpx.Response(200, json={"id": 7, "version_status": "draft"})
+    )
+    put = api.put("/api/v1/workflow/7").mock(return_value=httpx.Response(200, json={"id": 7}))
+    result = cli("agents", "set-prompt", "7", "New prompt")
+    assert result.exit_code == 0, result.output
+    assert draft.call_count == 1 and put.call_count == 1
+
+
+def test_rename_creates_a_draft_first_when_agent_is_published(cli, api):
+    wf = dict(load_fixture("workflow_fetch_one"), version_status="published")
+    api.get("/api/v1/workflow/fetch/7").mock(return_value=httpx.Response(200, json=wf))
+    draft = api.post("/api/v1/workflow/7/create-draft").mock(
+        return_value=httpx.Response(200, json={"id": 7, "version_status": "draft"})
+    )
+    put = api.put("/api/v1/workflow/7").mock(return_value=httpx.Response(200, json={"id": 7, "name": "Renamed"}))
+    result = cli("agents", "rename", "7", "Renamed")
+    assert result.exit_code == 0, result.output
+    assert draft.call_count == 1 and put.call_count == 1
