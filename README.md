@@ -33,12 +33,19 @@ Auth is the `X-API-Key` header (Bearer returns 401). The key is read from the en
 | Command | What it does |
 |---|---|
 | `ping` | Verify connectivity and API-key auth against your instance. |
-| `agents list` | List the workflows/agents on the instance. |
-| `runs list` / `runs latency` | Recent call runs with duration, disposition, and per-run latency. |
+| `agents list` / `create` / `set-prompt` / `rename` | List, generate, and edit voice agents (workflows). |
+| `runs list` / `runs latency` | Recent call runs with duration, disposition, and avg/p50/p95 latency. |
 | `numbers list` / `numbers assign` | Phone numbers on a telephony config; route a number to an agent. |
-| `models set` | Set the model configuration for an agent. |
 
-`ping` ships today; the rest of the command groups are built live on stream. Run `dograh-ctl --help` for the current surface.
+Run `dograh-ctl --help` for the current surface.
+
+## Roadmap
+
+The whole control surface, mapped. `[x]` shipped, `[>]` next, `[ ]` planned.
+
+![dograh-ctl command map](assets/dograh-ctl-command-map-v1.png)
+
+The build order is engine-first: `models show`/`set` (flip the realtime provider, OpenAI Realtime to Gemini Live) then `runs trigger` (place a call from the terminal) then `serve` (expose all of this as an MCP server so an agent drives Dograh itself).
 
 ## Design
 
