@@ -4,8 +4,15 @@ All notable changes to dograh-ctl. The format follows [Keep a Changelog](https:/
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-22
+
+Patch: per-node prompts and the end-call fix found on a live campaign call.
+
 ### Added
 - `agents set-prompt --node agentNode|startCall|globalNode|endCall` (repeatable; default agentNode) and `node_type` on the `agents_set_prompt` MCP tool, so persona (globalNode), greeting (startCall), and goodbye (endCall) prompts can be set without graph surgery.
+
+### Fixed
+- Goodbye loop at the end of calls: the skill now carries the prompt contract (agentNode says one goodbye then calls `end_call`; endCall is one line), verified live (end_call transition executed, call completed in 3 s).
 
 ## [0.3.0] - 2026-08-22
 
@@ -70,7 +77,8 @@ First public cut, built live on Day 8 of the AI by Erick stream.
 - numbers: `list`, `assign`.
 - Thin `httpx` client with `X-API-Key` auth; `typer` + `rich` output; env-only configuration (`DOGRAH_BASE_URL`, `DOGRAH_API_KEY`).
 
-[Unreleased]: https://github.com/erickcxc/dograh-ctl/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/erickcxc/dograh-ctl/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/erickcxc/dograh-ctl/releases/tag/v0.3.1
 [0.3.0]: https://github.com/erickcxc/dograh-ctl/releases/tag/v0.3.0
 [0.2.1]: https://github.com/erickcxc/dograh-ctl/releases/tag/v0.2.1
 [0.2.0]: https://github.com/erickcxc/dograh-ctl/releases/tag/v0.2.0

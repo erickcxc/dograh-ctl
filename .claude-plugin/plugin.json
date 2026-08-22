@@ -1,6 +1,6 @@
 {
   "name": "dograh-ctl",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Create and operate self-hosted Dograh voice agents from Claude Code: build an agent, set its prompt and model, publish it, route a number, test it by text, place a call, read the transcript. Ships the dograh-ops MCP server and a skill that knows the lifecycle.",
   "author": {
     "name": "Erick Paniagua",
