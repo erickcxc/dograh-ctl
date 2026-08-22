@@ -50,6 +50,48 @@ def agents_list():
     output.table(rows, AGENT_COLUMNS, title="Agents", raw=workflows)
 
 
+OVERRIDE_KEY = "model_configuration_v2_override"
+
+
+def _model_summary(cfg: Optional[dict]) -> str:
+    """One line per configured service: provider/model only, never api keys."""
+    if not cfg:
+        return "none (uses the org model configuration)"
+    byok = cfg.get("byok") or {}
+    block = byok.get(byok.get("mode") or "") or {}
+    parts = []
+    for service in ("realtime", "llm", "tts", "stt"):
+        svc = block.get(service) or {}
+        if svc.get("provider"):
+            parts.append(f"{service}={svc.get('provider')}/{svc.get('model', '?')}")
+    if cfg.get("mode") == "dograh":
+        parts.append("dograh-managed")
+    return ", ".join(parts) or "unset"
+
+
+@app.command("get")
+def agents_get(agent_id: int):
+    """Show one agent: status, version, node summary, and model override (secrets masked out)."""
+    client = DograhClient()
+    wf = client.get(f"/api/v1/workflow/fetch/{agent_id}")
+    nodes = (wf.get("workflow_definition") or {}).get("nodes") or []
+    counts: dict = {}
+    for n in nodes:
+        counts[n.get("type", "?")] = counts.get(n.get("type", "?"), 0) + 1
+    override = (wf.get("workflow_configurations") or {}).get(OVERRIDE_KEY)
+    rows = [
+        {"field": "id", "value": wf.get("id")},
+        {"field": "name", "value": wf.get("name")},
+        {"field": "status", "value": wf.get("status")},
+        {"field": "version", "value": f"{wf.get('version_number')} ({wf.get('version_status')})"},
+        {"field": "nodes", "value": ", ".join(f"{k} x{v}" for k, v in counts.items()) or "none"},
+        {"field": "model override", "value": _model_summary(override)},
+        {"field": "uuid", "value": wf.get("workflow_uuid")},
+    ]
+    output.table(rows, [("Field", "field", {"style": "cyan"}), ("Value", "value")],
+                 title=f"Agent #{agent_id}", raw=wf)
+
+
 @app.command("create")
 def agents_create(
     use_case: str = typer.Option(
