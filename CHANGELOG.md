@@ -4,11 +4,20 @@ All notable changes to dograh-ctl. The format follows [Keep a Changelog](https:/
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-22
+
+First PyPI release: `pip install dograh-ctl` / `uv tool install dograh-ctl`.
+
+### Added
+- PyPI publishing via GitHub Actions Trusted Publishing (`.github/workflows/release.yml`, runs on version tags).
+- CHANGELOG.
+
 ### Changed
 - README presents the finished command surface (32 commands, 9 groups) instead of a roadmap.
 - `pyproject.toml`: `mcp>=2.0` (the server uses the 2.0 `MCPServer` API), project URLs, authors, keywords, classifiers.
 - Test fixtures use a placeholder phone number.
 - LICENSE names the copyright holder in full.
+- Version test asserts `__version__` matches `pyproject.toml` (works on Python 3.10+).
 
 ## [0.2.0] - 2026-08-22
 
