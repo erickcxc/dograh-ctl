@@ -1,0 +1,28 @@
+{
+  "providers": [
+    {
+      "provider": "twilio",
+      "display_name": "Twilio",
+      "connectivity": "api",
+      "fields": [
+        {"name": "account_sid", "label": "Account SID", "type": "text", "required": true},
+        {"name": "auth_token", "label": "Auth Token", "type": "password", "required": true}
+      ],
+      "docs_url": "https://docs.dograh.com/telephony/twilio"
+    },
+    {
+      "provider": "vonage",
+      "display_name": "Vonage",
+      "connectivity": "api",
+      "fields": [],
+      "docs_url": null
+    },
+    {
+      "provider": "sip",
+      "display_name": "SIP trunk (bring your own carrier)",
+      "connectivity": "sip",
+      "fields": [],
+      "docs_url": null
+    }
+  ]
+}

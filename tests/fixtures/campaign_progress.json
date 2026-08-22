@@ -1,0 +1,12 @@
+{
+  "campaign_id": 21,
+  "state": "running",
+  "total_rows": 3,
+  "processed_rows": 1,
+  "failed_calls": 0,
+  "progress_percentage": 33.3,
+  "source_sync": {"status": "synced"},
+  "rate_limit": 2,
+  "started_at": "2026-08-21T19:12:00Z",
+  "completed_at": null
+}

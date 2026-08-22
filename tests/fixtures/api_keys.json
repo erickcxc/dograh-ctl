@@ -1,0 +1,4 @@
+[
+  {"id": 1, "name": "dograh-ctl laptop", "key_prefix": "dgr_ab12", "is_active": true, "created_at": "2026-06-16T20:00:00Z", "last_used_at": "2026-08-21T18:00:00Z", "archived_at": null},
+  {"id": 2, "name": "old ci key", "key_prefix": "dgr_zz99", "is_active": false, "created_at": "2026-06-01T00:00:00Z", "last_used_at": null, "archived_at": "2026-07-01T00:00:00Z"}
+]

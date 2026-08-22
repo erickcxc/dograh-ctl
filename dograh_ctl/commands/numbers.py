@@ -6,7 +6,7 @@ mapping; it does not release the number at the carrier.
 """
 from __future__ import annotations
 
-from typing import Iterator, Tuple
+from typing import Iterator, Optional, Tuple
 
 import typer
 
@@ -82,3 +82,51 @@ def numbers_assign(number: str, agent_id: int):
         json={"inbound_workflow_id": agent_id},
     )
     output.ok(f"{number} -> agent {agent_id}", data=result)
+
+
+def _default_config_id(client: DograhClient) -> int:
+    configs = telephony_configs(client)
+    if not configs:
+        output.fail("no telephony configuration on this instance (add one in the dashboard first)")
+        raise typer.Exit(1)
+    for c in configs:
+        if c.get("is_default_outbound"):
+            return c["id"]
+    return configs[0]["id"]
+
+
+@app.command("add")
+def numbers_add(
+    number: str,
+    agent_id: Optional[int] = typer.Option(
+        None, "--agent", help="Route inbound calls to this agent."
+    ),
+    label: Optional[str] = typer.Option(None, "--label", help="Friendly label."),
+    config_id: Optional[int] = typer.Option(
+        None, "--config", help="Telephony configuration id (default: the default outbound config)."
+    ),
+):
+    """Register a number you already own (buy it at the carrier first, e.g. the Twilio CLI)."""
+    client = DograhClient()
+    cid = config_id if config_id is not None else _default_config_id(client)
+    body = {"address": number, "is_active": True}
+    if label:
+        body["label"] = label
+    if agent_id is not None:
+        body["inbound_workflow_id"] = agent_id
+    result = client.post(f"/api/v1/organizations/telephony-configs/{cid}/phone-numbers", json=body)
+    routed = f" -> agent {agent_id}" if agent_id is not None else ""
+    output.ok(f"registered {number} on config {cid}{routed}", data=result)
+
+
+@app.command("remove")
+def numbers_remove(
+    number: str,
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip the confirmation prompt."),
+):
+    """Remove a number from Dograh. Does NOT release it at the carrier."""
+    client = DograhClient()
+    cid, n = find_number(client, number)
+    output.confirm(yes, f"Remove {number} from Dograh (config {cid})? The carrier still bills it.")
+    result = client.delete(f"/api/v1/organizations/telephony-configs/{cid}/phone-numbers/{n['id']}")
+    output.ok(f"removed {number} from Dograh (release it at the carrier separately)", data=result)
