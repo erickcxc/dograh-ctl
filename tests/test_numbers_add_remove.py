@@ -44,9 +44,9 @@ def test_remove_needs_yes_and_deletes_the_mapping(cli, api):
     route = api.delete("/api/v1/organizations/telephony-configs/3/phone-numbers/11").mock(
         return_value=httpx.Response(200, json={"success": True})
     )
-    result = cli("numbers", "remove", "+13132283817")
+    result = cli("numbers", "remove", "+13135550100")
     assert result.exit_code == 1 and route.call_count == 0
-    result = cli("numbers", "remove", "+13132283817", "--yes")
+    result = cli("numbers", "remove", "+13135550100", "--yes")
     assert result.exit_code == 0, result.output
     assert route.call_count == 1
     assert "carrier" in result.output  # reminds that the number is not released at the carrier

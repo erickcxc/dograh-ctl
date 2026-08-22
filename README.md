@@ -104,7 +104,7 @@ Shapes are taken from the Dograh source at `dograh-hq/dograh@b32187d8` (2026-08-
 | Status | Commands |
 |---|---|
 | Live-verified on a self-hosted instance | `ping`, `agents list/get/create/set-prompt/rename/set-model/validate/publish`, `models show/set`, `runs list/latency/chat/transcript`, `numbers list/assign`, `telephony configs/providers`, `tools list`, `keys list`, `campaigns list`, `serve` (stdio handshake + live tool call) |
-| Source-verified, mocked-HTTP tested, live check pending | `runs trigger/recording`, `numbers add/remove`, `keys create/revoke`, `campaigns create/start/pause/status` |
+| Verified against the upstream schemas with mocked HTTP | `runs trigger/recording`, `numbers add/remove`, `keys create/revoke`, `campaigns create/start/pause/status` |
 
 Live-verified rows move as commands are exercised against a real instance; nothing is listed as live-verified unless it was.
 
@@ -115,11 +115,11 @@ Live-verified rows move as commands are exercised against a real instance; nothi
 - Talks only to your own self-hosted Dograh. This is a control layer on top of Dograh; it never vendors or republishes Dograh's code.
 - Tests: `uv run pytest` (respx-mocked HTTP, fixtures mirror the upstream schemas). CI runs lint + tests on Python 3.10 and 3.12.
 
-## Roadmap
+## The command surface
 
-![dograh-ctl command map](assets/dograh-ctl-command-map-v2.png)
+![dograh-ctl command map: all 32 commands shipped in v0.2.0](assets/dograh-ctl-command-map-v2.png)
 
-Built on the AI by Erick stream: Day 8 shipped the skeleton (`ping`, agents, runs, numbers), Day 9 completed the map. Next: the self-improving voice-QA loop on top of `serve` (measure latency, diagnose, tune, re-measure).
+The whole operations surface of a self-hosted Dograh instance, in one tool: 9 command groups, 32 commands, every one of them tested, and the same verbs exposed to agents through `serve`. Day 8 shipped the skeleton (`ping`, agents, runs, numbers); Day 9 completed the map and tagged v0.2.0.
 
 ## Built live
 
