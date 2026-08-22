@@ -67,6 +67,8 @@ First public cut, built live on Day 8 of the AI by Erick stream.
 - numbers: `list`, `assign`.
 - Thin `httpx` client with `X-API-Key` auth; `typer` + `rich` output; env-only configuration (`DOGRAH_BASE_URL`, `DOGRAH_API_KEY`).
 
-[Unreleased]: https://github.com/erickcxc/dograh-ctl/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/erickcxc/dograh-ctl/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/erickcxc/dograh-ctl/releases/tag/v0.3.0
+[0.2.1]: https://github.com/erickcxc/dograh-ctl/releases/tag/v0.2.1
 [0.2.0]: https://github.com/erickcxc/dograh-ctl/releases/tag/v0.2.0
 [0.1.0]: https://github.com/erickcxc/dograh-ctl/commit/07e4c43
