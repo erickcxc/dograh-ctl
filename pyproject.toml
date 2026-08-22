@@ -1,6 +1,6 @@
 [project]
 name = "dograh-ctl"
-version = "0.1.0"
+version = "0.2.0"
 description = "A CLI to run a self-hosted Dograh voice-agent platform from the terminal."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -13,6 +13,27 @@ dependencies = [
 
 [project.scripts]
 dograh-ctl = "dograh_ctl.main:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "respx>=0.22",
+    "ruff>=0.6",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
 
 [build-system]
 requires = ["hatchling"]

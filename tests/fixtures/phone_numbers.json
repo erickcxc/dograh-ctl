@@ -1,0 +1,22 @@
+{
+  "phone_numbers": [
+    {
+      "id": 11,
+      "telephony_configuration_id": 3,
+      "address": "+13132283817",
+      "address_normalized": "+13132283817",
+      "address_type": "e164",
+      "country_code": "US",
+      "label": "AI by Erick - stream call-in",
+      "inbound_workflow_id": 7,
+      "inbound_workflow_name": "Stream Call-In",
+      "telephony_trunk_id": null,
+      "is_active": true,
+      "is_default_caller_id": true,
+      "extra_metadata": {},
+      "created_at": "2026-08-21T17:00:00Z",
+      "updated_at": "2026-08-21T17:05:00Z",
+      "provider_sync": {"ok": true, "message": null}
+    }
+  ]
+}

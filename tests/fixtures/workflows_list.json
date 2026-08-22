@@ -1,0 +1,4 @@
+[
+  {"id": 7, "name": "Stream Call-In", "status": "active", "created_at": "2026-06-17T01:02:03Z", "total_runs": 12},
+  {"id": 9, "name": "Lead Qualifier", "status": "archived", "created_at": "2026-06-10T09:00:00Z", "total_runs": 0}
+]

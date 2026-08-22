@@ -1,0 +1,51 @@
+{
+  "runs": [
+    {
+      "id": 501,
+      "workflow_id": 7,
+      "workflow_name": "Stream Call-In",
+      "name": "WR-TEL-OUT-00012345",
+      "created_at": "2026-08-21T18:00:00",
+      "dograh_token_usage": 12.5,
+      "call_duration_seconds": 42,
+      "recording_url": "recordings/501.wav",
+      "transcript_url": "transcripts/501.txt",
+      "recording_public_url": "https://dograh.test/api/v1/public/download/workflow/tok501/recording",
+      "transcript_public_url": "https://dograh.test/api/v1/public/download/workflow/tok501/transcript",
+      "public_access_token": "tok501",
+      "caller_number": "+13132283817",
+      "called_number": "+13135550100",
+      "call_type": "outbound",
+      "mode": "twilio",
+      "disposition": "completed",
+      "initial_context": {"runtime_configuration": {"realtime_model": "gemini-3.1-flash-live-preview"}},
+      "gathered_context": {"provider": "twilio"},
+      "charge_usd": 0.05
+    },
+    {
+      "id": 500,
+      "workflow_id": 7,
+      "workflow_name": "Stream Call-In",
+      "name": "WR-TEL-OUT-00012344",
+      "created_at": "2026-08-21T17:30:00",
+      "dograh_token_usage": 0,
+      "call_duration_seconds": 18,
+      "recording_url": null,
+      "transcript_url": null,
+      "caller_number": "+13132283817",
+      "called_number": "+13135550101",
+      "call_type": "outbound",
+      "mode": "twilio",
+      "disposition": "no-answer",
+      "initial_context": {"runtime_configuration": {"llm_model": "gpt-4.1-mini"}},
+      "gathered_context": null,
+      "charge_usd": 0.0
+    }
+  ],
+  "total_dograh_tokens": 12.5,
+  "total_duration_seconds": 60,
+  "total_count": 2,
+  "page": 1,
+  "limit": 10,
+  "total_pages": 1
+}
