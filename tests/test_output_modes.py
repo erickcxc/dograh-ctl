@@ -23,7 +23,8 @@ def test_trailing_json_flag_on_a_command(cli, api):
 
 
 def test_version_flag():
-    import tomllib
+    import re
+
     from conftest import CliRunner
 
     from dograh_ctl import __version__
@@ -32,6 +33,7 @@ def test_version_flag():
     result = CliRunner().invoke(app, ["--version"])
     assert result.exit_code == 0
     assert __version__ in result.output
-    # the package version and pyproject must never drift
-    pyproject = tomllib.loads((pathlib.Path(__file__).parents[1] / "pyproject.toml").read_text())
-    assert __version__ == pyproject["project"]["version"]
+    # the package version and pyproject must never drift (regex, not tomllib: 3.10 has no tomllib)
+    pyproject = (pathlib.Path(__file__).parents[1] / "pyproject.toml").read_text()
+    match = re.search(r'^version = "([^"]+)"', pyproject, re.MULTILINE)
+    assert match and __version__ == match.group(1)
