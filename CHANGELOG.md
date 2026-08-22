@@ -4,6 +4,9 @@ All notable changes to dograh-ctl. The format follows [Keep a Changelog](https:/
 
 ## [Unreleased]
 
+### Added
+- `agents set-prompt --node agentNode|startCall|globalNode|endCall` (repeatable; default agentNode) and `node_type` on the `agents_set_prompt` MCP tool, so persona (globalNode), greeting (startCall), and goodbye (endCall) prompts can be set without graph surgery.
+
 ## [0.3.0] - 2026-08-22
 
 Agent-first release: Claude Code (or any MCP client) can now create, publish, number, test, and call a voice agent end to end through dograh-ctl.

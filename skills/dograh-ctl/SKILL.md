@@ -49,9 +49,11 @@ Campaigns: `campaigns_create(name, agent_id, csv_path)` (CSV with a `phone_numbe
 - Provider/model strings are `provider/model`, e.g. `google_realtime/gemini-3.1-flash-live-preview`,
   `openai_realtime/gpt-realtime-2`, `openai/gpt-4.1-mini`. `models_show` tells you the current mode
   (byok realtime vs pipeline); only services that exist in that mode can be set.
-- `agents_set_prompt` rewrites the prompt on the agentNode(s) only. Dograh's template puts the
-  persona and greeting in the globalNode and startCall node, so "change the agent's persona or
-  greeting" is a graph edit: use Dograh's own MCP server for that, then `agents_publish`.
+- `agents_set_prompt` targets the agentNode by default. Dograh's template keeps the persona in the
+  globalNode, the greeting in startCall, and the goodbye in endCall: pass `node_type` (MCP) or
+  `--node globalNode|startCall|endCall` (CLI, repeatable) to change those. Always `agents_publish`
+  after. Prompt contract that avoids goodbye loops: agentNode says one goodbye then calls end_call;
+  endCall is one line.
 - Graph surgery (nodes, edges, tools attached to nodes) is Dograh's own MCP server
   (`{DOGRAH_BASE_URL}/api/v1/mcp`, same API key). Use it for structure; use dograh-ctl for everything
   around it.
