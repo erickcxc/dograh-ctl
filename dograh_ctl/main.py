@@ -43,6 +43,14 @@ def ping():
     )
 
 
+@app.command()
+def serve():
+    """Run the MCP operations server over stdio so an agent can drive Dograh through dograh-ctl."""
+    from .serve import build_server
+
+    build_server().run("stdio")
+
+
 app.add_typer(agents.app, name="agents")
 app.add_typer(runs.app, name="runs")
 app.add_typer(numbers.app, name="numbers")
