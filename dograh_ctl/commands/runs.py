@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import pathlib
+import re
 import sys
+import time
 from typing import Optional
 
 import typer
@@ -71,10 +73,27 @@ def resolve_run(client: DograhClient, run_id: int, agent_id: Optional[int] = Non
     return client.get(f"/api/v1/workflow/{agent_id}/runs/{run_id}")
 
 
+def _assistant_texts(session: dict) -> list:
+    """Assistant utterances in order. Live API: session_data.turns[].assistant_message.text;
+    older shape: session_data.messages[] with role/content."""
+    sd = session.get("session_data") or {}
+    texts = []
+    for turn in sd.get("turns") or []:
+        msg = turn.get("assistant_message")
+        if isinstance(msg, dict):
+            msg = msg.get("text") or msg.get("content")
+        if msg:
+            texts.append(str(msg))
+    for m in sd.get("messages") or []:
+        if m.get("role") == "assistant" and m.get("content"):
+            texts.append(str(m["content"]))
+    return texts
+
+
 def _new_assistant_messages(before: dict, after: dict) -> list:
-    old = (before.get("session_data") or {}).get("messages") or []
-    new = (after.get("session_data") or {}).get("messages") or []
-    return [m for m in new[len(old):] if m.get("role") == "assistant"]
+    old = _assistant_texts(before)
+    new = _assistant_texts(after)
+    return [{"content": t} for t in new[len(old):]]
 
 
 @app.command("chat")
@@ -95,7 +114,7 @@ def runs_chat(
             for m in messages:
                 output.console.print(f"[cyan]agent>[/cyan] {m.get('content', '')}")
 
-    say((session.get("session_data") or {}).get("messages") or [])
+    say([{"content": t} for t in _assistant_texts(session)])
 
     def send(text: str) -> None:
         nonlocal session
@@ -148,6 +167,93 @@ def runs_recording(
         f"saved {len(r.content)} bytes to {path}",
         data={"run_id": run_id, "path": str(path), "bytes": len(r.content)},
     )
+
+
+RUN_NAME_RE = re.compile(r"(WR-[A-Z-]+-\d+)")
+
+
+def _find_run_by_name(client: DograhClient, name: str, attempts: int = 5) -> Optional[dict]:
+    for _ in range(attempts):
+        for r in _usage_runs(client, 50).get("runs", []):
+            if r.get("name") == name:
+                return r
+        time.sleep(1.0)
+    return None
+
+
+@app.command("trigger")
+def runs_trigger(
+    agent_id: int,
+    to: Optional[str] = typer.Option(
+        None, "--to", help="E.164 number to call (default: org test number)."
+    ),
+    config_id: Optional[int] = typer.Option(None, "--config", help="Telephony configuration id."),
+    from_id: Optional[int] = typer.Option(None, "--from-id", help="Phone number id to call from."),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip the confirmation prompt."),
+):
+    """Place an outbound call from an agent to a number (real call, real cost)."""
+    client = DograhClient()
+    target = to or "the org test number"
+    output.confirm(yes, f"Place a real call from agent {agent_id} to {target}?")
+    body: dict = {"workflow_id": agent_id}
+    if to:
+        body["phone_number"] = to
+    if config_id is not None:
+        body["telephony_configuration_id"] = config_id
+    if from_id is not None:
+        body["from_phone_number_id"] = from_id
+    result = client.post("/api/v1/telephony/initiate-call", json=body) or {}
+    message = result.get("message", "")
+    match = RUN_NAME_RE.search(message)
+    run_name = match.group(1) if match else None
+    run = _find_run_by_name(client, run_name) if run_name else None
+    run_id = run.get("id") if run else None
+    text = f"call initiated: {run_name or message}"
+    if run_id is not None:
+        text += f" (run id {run_id}; `runs transcript {run_id}` when it ends)"
+    output.ok(text, data={"run_name": run_name, "run_id": run_id, "message": message})
+
+
+def _render_transcript(body: str, parsed) -> str:
+    if isinstance(parsed, list):
+        lines = []
+        for turn in parsed:
+            if isinstance(turn, dict):
+                content = turn.get("content", turn.get("text", ""))
+                lines.append(f"{turn.get('role', '?')}: {content}")
+            else:
+                lines.append(str(turn))
+        return "\n".join(lines)
+    if isinstance(parsed, dict):
+        turns = parsed.get("messages") or parsed.get("transcript") or parsed.get("turns")
+        if isinstance(turns, list):
+            return _render_transcript(body, turns)
+    return body
+
+
+@app.command("transcript")
+def runs_transcript(
+    run_id: int,
+    agent_id: Optional[int] = typer.Option(None, "--agent", help="Agent id (skips the lookup)."),
+):
+    """Print a run's transcript (fetched from its public artifact URL)."""
+    client = DograhClient()
+    run = resolve_run(client, run_id, agent_id)
+    url = run.get("transcript_public_url")
+    if not url:
+        output.fail(f"no transcript for run {run_id} (not finished, or recording disabled)")
+        raise typer.Exit(1)
+    r = client.get_public(url)
+    body = r.text
+    try:
+        parsed = r.json()
+    except ValueError:
+        parsed = None
+    text = _render_transcript(body, parsed)
+    if output.state.json:
+        output.emit({"run_id": run_id, "transcript": text})
+    else:
+        output.console.print(text)
 
 
 @app.command("latency")

@@ -74,3 +74,23 @@ def test_recording_without_artifact_exits_1(cli, api, tmp_path):
     result = cli("runs", "recording", "500", "--out", str(tmp_path / "x.wav"))
     assert result.exit_code == 1
     assert "no recording" in result.output
+
+
+def test_chat_prints_assistant_text_from_live_turns_shape(cli, api):
+    """Live API shape (2026-08-22): session_data.turns[].assistant_message.text."""
+    base = load_fixture("text_chat_session")
+    start = dict(base, session_data={"turns": [
+        {"id": "t1", "status": "completed", "user_message": None,
+         "assistant_message": {"text": "Hey there! I am Sam."}}
+    ]})
+    after = dict(base, revision=2, session_data={"turns": start["session_data"]["turns"] + [
+        {"id": "t2", "status": "completed", "user_message": "hello",
+         "assistant_message": {"text": "Great to meet you."}}
+    ]})
+    api.post("/api/v1/workflow/7/text-chat/sessions").mock(return_value=httpx.Response(200, json=start))
+    api.post("/api/v1/workflow/7/text-chat/sessions/777/messages").mock(return_value=httpx.Response(200, json=after))
+    api.post("/api/v1/workflow/7/text-chat/sessions/777/end").mock(return_value=httpx.Response(200, json=dict(after, state="ended")))
+    result = cli("runs", "chat", "7", "-m", "hello")
+    assert result.exit_code == 0, result.output
+    assert "Hey there! I am Sam." in result.output
+    assert "Great to meet you." in result.output
