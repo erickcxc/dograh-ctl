@@ -45,23 +45,15 @@ def campaigns_list():
     output.table([_row(c) for c in campaigns], CAMPAIGN_COLUMNS, title="Campaigns", raw=campaigns)
 
 
-@app.command("create")
-def campaigns_create(
-    name: str = typer.Option(..., "--name", help="Campaign name."),
-    agent_id: int = typer.Option(..., "--agent", help="Agent (workflow) id that places the calls."),
-    csv: pathlib.Path = typer.Option(..., "--csv", help="CSV with a phone_number column."),
-    config_id: Optional[int] = typer.Option(
-        None, "--config", help="Telephony configuration id (default: the org default outbound)."
-    ),
-    max_concurrency: Optional[int] = typer.Option(
-        None, "--max-concurrency", min=1, max=100, help="Parallel calls (1-100)."
-    ),
-):
-    """Upload a CSV and create a campaign from it (does not start it)."""
-    if csv.suffix.lower() != ".csv" or not csv.is_file():
-        output.fail(f"{csv} must be an existing .csv file")
-        raise typer.Exit(1)
-    client = DograhClient()
+def create_campaign(
+    client: DograhClient,
+    name: str,
+    agent_id: int,
+    csv: pathlib.Path,
+    config_id: Optional[int] = None,
+    max_concurrency: Optional[int] = None,
+) -> dict:
+    """Presign, upload the CSV, and create the campaign (not started). Returns the campaign."""
     data = csv.read_bytes()
     presigned = client.post(
         "/api/v1/s3/presigned-upload-url",
@@ -85,7 +77,27 @@ def campaigns_create(
         body["telephony_configuration_id"] = config_id
     if max_concurrency is not None:
         body["max_concurrency"] = max_concurrency
-    campaign = client.post("/api/v1/campaign/create", json=body)
+    return client.post("/api/v1/campaign/create", json=body)
+
+
+@app.command("create")
+def campaigns_create(
+    name: str = typer.Option(..., "--name", help="Campaign name."),
+    agent_id: int = typer.Option(..., "--agent", help="Agent (workflow) id that places the calls."),
+    csv: pathlib.Path = typer.Option(..., "--csv", help="CSV with a phone_number column."),
+    config_id: Optional[int] = typer.Option(
+        None, "--config", help="Telephony configuration id (default: the org default outbound)."
+    ),
+    max_concurrency: Optional[int] = typer.Option(
+        None, "--max-concurrency", min=1, max=100, help="Parallel calls (1-100)."
+    ),
+):
+    """Upload a CSV and create a campaign from it (does not start it)."""
+    if csv.suffix.lower() != ".csv" or not csv.is_file():
+        output.fail(f"{csv} must be an existing .csv file")
+        raise typer.Exit(1)
+    client = DograhClient()
+    campaign = create_campaign(client, name, agent_id, csv, config_id, max_concurrency)
     output.ok(
         f"created campaign #{campaign.get('id')} '{name}' ({campaign.get('total_rows')} rows); "
         f"start it with `campaigns start {campaign.get('id')} --yes`",

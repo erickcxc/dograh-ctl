@@ -113,10 +113,9 @@ def agents_create(
     output.ok(f"created agent #{wf.get('id')} {wf.get('name') or use_case}", data=wf)
 
 
-@app.command("set-prompt")
-def agents_set_prompt(agent_id: int, prompt: str):
-    """Replace the prompt on every agentNode of an agent (saved as a new draft)."""
-    client = DograhClient()
+def update_prompt(client: DograhClient, agent_id: int, prompt: str) -> dict:
+    """Set PROMPT on every agentNode (draft-first). Returns the PUT result; raises ValueError
+    when the agent has no agentNode."""
     wf = ensure_draft(client, agent_id)
     wd = wf.get("workflow_definition") or {}
     hit = False
@@ -125,9 +124,19 @@ def agents_set_prompt(agent_id: int, prompt: str):
             n.setdefault("data", {})["prompt"] = prompt
             hit = True
     if not hit:
-        output.fail("no agentNode found in this agent")
-        raise typer.Exit(1)
-    result = client.put(f"/api/v1/workflow/{agent_id}", json={"workflow_definition": wd})
+        raise ValueError("no agentNode found in this agent")
+    return client.put(f"/api/v1/workflow/{agent_id}", json={"workflow_definition": wd})
+
+
+@app.command("set-prompt")
+def agents_set_prompt(agent_id: int, prompt: str):
+    """Replace the prompt on every agentNode of an agent (saved as a new draft)."""
+    client = DograhClient()
+    try:
+        result = update_prompt(client, agent_id, prompt)
+    except ValueError as exc:
+        output.fail(str(exc))
+        raise typer.Exit(1) from None
     output.ok(
         f"agent #{agent_id} prompt updated (draft; run `agents publish {agent_id}` to go live)",
         data=result,
