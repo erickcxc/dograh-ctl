@@ -1,7 +1,7 @@
 """agents: the voice agents (Dograh calls them workflows)."""
 from __future__ import annotations
 
-from typing import Optional
+from typing import List, Optional, Sequence
 
 import typer
 
@@ -113,32 +113,53 @@ def agents_create(
     output.ok(f"created agent #{wf.get('id')} {wf.get('name') or use_case}", data=wf)
 
 
-def update_prompt(client: DograhClient, agent_id: int, prompt: str) -> dict:
-    """Set PROMPT on every agentNode (draft-first). Returns the PUT result; raises ValueError
-    when the agent has no agentNode."""
+NODE_TYPES = ("startCall", "agentNode", "globalNode", "endCall")
+
+
+def update_prompt(
+    client: DograhClient,
+    agent_id: int,
+    prompt: str,
+    node_types: Sequence[str] = ("agentNode",),
+) -> dict:
+    """Set PROMPT on every node whose type is in NODE_TYPES (draft-first). Returns the PUT
+    result; raises ValueError when no such node exists."""
     wf = ensure_draft(client, agent_id)
     wd = wf.get("workflow_definition") or {}
     hit = False
     for n in wd.get("nodes", []):
-        if n.get("type") == "agentNode":
+        if n.get("type") in node_types:
             n.setdefault("data", {})["prompt"] = prompt
             hit = True
     if not hit:
-        raise ValueError("no agentNode found in this agent")
+        raise ValueError(f"no {', '.join(node_types)} node found in this agent")
     return client.put(f"/api/v1/workflow/{agent_id}", json={"workflow_definition": wd})
 
 
 @app.command("set-prompt")
-def agents_set_prompt(agent_id: int, prompt: str):
-    """Replace the prompt on every agentNode of an agent (saved as a new draft)."""
+def agents_set_prompt(
+    agent_id: int,
+    prompt: str,
+    node: List[str] = typer.Option(
+        ["agentNode"],
+        "--node",
+        help="Node type(s) to update: agentNode (default), startCall, globalNode, endCall.",
+    ),
+):
+    """Replace the prompt on an agent's nodes (agentNode by default; saved as a new draft)."""
+    bad = [t for t in node if t not in NODE_TYPES]
+    if bad:
+        output.fail(f"unknown node type(s) {', '.join(bad)}; choose from {', '.join(NODE_TYPES)}")
+        raise typer.Exit(2)
     client = DograhClient()
     try:
-        result = update_prompt(client, agent_id, prompt)
+        result = update_prompt(client, agent_id, prompt, tuple(node))
     except ValueError as exc:
         output.fail(str(exc))
         raise typer.Exit(1) from None
     output.ok(
-        f"agent #{agent_id} prompt updated (draft; run `agents publish {agent_id}` to go live)",
+        f"agent #{agent_id} prompt updated on {', '.join(node)} "
+        f"(draft; run `agents publish {agent_id}` to go live)",
         data=result,
     )
 

@@ -165,11 +165,14 @@ def build_server() -> MCPServer:
         }
 
     @server.tool(annotations=WRITE)
-    def agents_set_prompt(agent_id: int, prompt: str) -> dict:
-        """Replace the prompt on every agentNode (saved as a draft; publish to go live)."""
+    def agents_set_prompt(agent_id: int, prompt: str, node_type: str = "agentNode") -> dict:
+        """Replace the prompt on the agent's nodes of NODE_TYPE (agentNode default; also
+        startCall, globalNode, endCall). Saved as a draft; publish to go live."""
+        if node_type not in agents_cmd.NODE_TYPES:
+            raise ValueError(f"node_type must be one of {', '.join(agents_cmd.NODE_TYPES)}")
         client = DograhClient()
         try:
-            result = agents_cmd.update_prompt(client, agent_id, prompt)
+            result = agents_cmd.update_prompt(client, agent_id, prompt, (node_type,))
         except ValueError as exc:
             raise RuntimeError(str(exc)) from None
         return {
