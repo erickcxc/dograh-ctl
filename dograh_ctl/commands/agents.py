@@ -134,6 +134,73 @@ def agents_set_prompt(agent_id: int, prompt: str):
     )
 
 
+@app.command("set-model")
+def agents_set_model(
+    agent_id: int,
+    realtime: Optional[str] = typer.Option(
+        None, "--realtime", help="provider/model (speech-to-speech)."
+    ),
+    llm: Optional[str] = typer.Option(None, "--llm", help="provider/model for the LLM."),
+    tts: Optional[str] = typer.Option(None, "--tts", help="provider/model for text-to-speech."),
+    stt: Optional[str] = typer.Option(None, "--stt", help="provider/model for speech-to-text."),
+):
+    """Per-agent model override (read-modify-write). Saves a draft: publish to make it live."""
+    from .models import MODEL_CONFIG_PATH, apply_changes
+
+    flags = (("realtime", realtime), ("llm", llm), ("tts", tts), ("stt", stt))
+    changes = {k: v for k, v in flags if v}
+    if not changes:
+        output.fail("pass at least one of --realtime, --llm, --tts, --stt (provider/model)")
+        raise typer.Exit(2)
+    client = DograhClient()
+    wf = ensure_draft(client, agent_id)
+    configs = dict(wf.get("workflow_configurations") or {})
+    cfg = configs.get(OVERRIDE_KEY)
+    if not cfg:
+        # No override yet: start from the org configuration so the override is complete.
+        cfg = client.get(MODEL_CONFIG_PATH).get("configuration")
+        if not cfg:
+            output.fail(
+                "no org model configuration to start from; set one up once in the dashboard"
+            )
+            raise typer.Exit(1)
+    applied = apply_changes(cfg, changes)
+    configs[OVERRIDE_KEY] = cfg
+    result = client.put(f"/api/v1/workflow/{agent_id}", json={"workflow_configurations": configs})
+    output.ok(
+        f"agent #{agent_id} model override: " + "; ".join(applied)
+        + f" (draft; run `agents publish {agent_id}` to go live)",
+        data=result,
+    )
+
+
+@app.command("publish")
+def agents_publish(agent_id: int):
+    """Publish the agent's draft so calls use it."""
+    client = DograhClient()
+    result = client.post(f"/api/v1/workflow/{agent_id}/publish") or {}
+    version = result.get("version_number")
+    output.ok(
+        f"agent #{agent_id} published" + (f" (version {version})" if version else ""),
+        data=result,
+    )
+
+
+@app.command("validate")
+def agents_validate(agent_id: int):
+    """Validate the agent's current draft graph."""
+    client = DograhClient()
+    result = client.post(f"/api/v1/workflow/{agent_id}/validate") or {}
+    valid = result.get("valid")
+    errors = result.get("errors") or []
+    if valid is False or errors:
+        output.fail(f"agent #{agent_id} has {len(errors)} validation error(s): {errors}")
+        if output.state.json:
+            output.emit(result)
+        raise typer.Exit(1)
+    output.ok(f"agent #{agent_id} is valid", data=result)
+
+
 @app.command("rename")
 def agents_rename(agent_id: int, name: str):
     """Rename an agent."""

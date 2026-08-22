@@ -24,7 +24,8 @@ def parse_spec(service: str, spec: str) -> Tuple[str, str]:
     """'provider/model' -> (provider, model); exit 2 on anything else."""
     if spec.count("/") != 1 or not all(spec.split("/")):
         output.fail(
-            f"--{service} expects provider/model, e.g. google_realtime/gemini-3.1-flash-live-preview"
+            f"--{service} expects provider/model, "
+            "e.g. google_realtime/gemini-3.1-flash-live-preview"
         )
         raise typer.Exit(2)
     provider, model = spec.split("/")
@@ -59,7 +60,9 @@ def apply_changes(cfg: dict, changes: Dict[str, str]) -> List[str]:
         provider, model = parse_spec(service, spec)
         if service not in block or block.get(service) is None:
             available = ", ".join(k for k in SERVICES if block.get(k))
-            output.fail(f"'{service}' is not part of the {mode} configuration (available: {available})")
+            output.fail(
+                f"'{service}' is not part of the {mode} configuration (available: {available})"
+            )
             raise typer.Exit(1)
         block[service]["provider"] = provider
         block[service]["model"] = model
@@ -78,7 +81,8 @@ def summary_rows(resp: dict) -> list:
     for service in SERVICES:
         svc = block.get(service) or {}
         if svc.get("provider"):
-            rows.append({"field": service, "value": f"{svc['provider']}/{svc.get('model', '?')}"})
+            value = f"{svc['provider']}/{svc.get('model', '?')}"
+            rows.append({"field": service, "value": value})
     eff = resp.get("effective_configuration") or {}
     rows.append({"field": "source", "value": resp.get("source", "-")})
     if eff.get("test_phone_number"):
