@@ -10,12 +10,17 @@ Dograh ships a REST API, generated SDKs, a dashboard, and an MCP server for *bui
 
 ## Install
 
-No clone needed:
+From PyPI:
+
+```bash
+uv tool install dograh-ctl        # or: pip install dograh-ctl
+uvx dograh-ctl --help             # try it without installing
+```
+
+Or straight from GitHub:
 
 ```bash
 uv tool install git+https://github.com/erickcxc/dograh-ctl
-# or try it without installing
-uvx --from git+https://github.com/erickcxc/dograh-ctl dograh-ctl --help
 ```
 
 From a clone: `pip install -e .` (or `uv sync`). Python 3.10+.
