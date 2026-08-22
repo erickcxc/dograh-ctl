@@ -1,0 +1,25 @@
+{
+  "configuration": {
+    "version": 2,
+    "mode": "byok",
+    "dograh": null,
+    "byok": {
+      "mode": "realtime",
+      "pipeline": null,
+      "realtime": {
+        "realtime": {"provider": "openai_realtime", "model": "gpt-realtime-2", "api_key": "****1234"},
+        "llm": {"provider": "openai", "model": "gpt-4.1-mini", "api_key": "****5678"},
+        "embeddings": null
+      }
+    }
+  },
+  "effective_configuration": {
+    "llm": {"provider": "openai", "model": "gpt-4.1-mini"},
+    "realtime": {"provider": "openai_realtime", "model": "gpt-realtime-2"},
+    "is_realtime": true,
+    "managed_service_version": null,
+    "test_phone_number": "+13135550100",
+    "timezone": "America/Detroit"
+  },
+  "source": "organization_v2"
+}

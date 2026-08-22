@@ -6,7 +6,7 @@ import typer
 from . import output
 from .cli import GuardedTyper
 from .client import DograhClient
-from .commands import agents, campaigns, keys, numbers, runs, telephony, tools
+from .commands import agents, campaigns, keys, models, numbers, runs, telephony, tools
 
 app = GuardedTyper(help="Run your self-hosted Dograh voice-agent platform from the terminal.")
 
@@ -46,6 +46,7 @@ def ping():
 app.add_typer(agents.app, name="agents")
 app.add_typer(runs.app, name="runs")
 app.add_typer(numbers.app, name="numbers")
+app.add_typer(models.app, name="models")
 app.add_typer(campaigns.app, name="campaigns")
 app.add_typer(telephony.app, name="telephony")
 app.add_typer(tools.app, name="tools")
