@@ -33,7 +33,7 @@ dependencies = [
 Homepage = "https://github.com/erickcxc/dograh-ctl"
 Repository = "https://github.com/erickcxc/dograh-ctl"
 Issues = "https://github.com/erickcxc/dograh-ctl/issues"
-Changelog = "https://github.com/erickcxc/dograh-ctl/releases"
+Changelog = "https://github.com/erickcxc/dograh-ctl/blob/main/CHANGELOG.md"
 
 [project.scripts]
 dograh-ctl = "dograh_ctl.main:app"
